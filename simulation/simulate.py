@@ -120,7 +120,7 @@ def find_shift(sample_period, f0, spectrum):
 	freq_mean = mean*fpb
 	std_dev = std_dev*fpb
 	
-	return f0 - freq_mean, std_dev
+	return freq_mean - f0, std_dev
 
 def freq_spectrum(signal):
 	return [np.absolute(sample) for sample in np.fft.rfft(signal)]
@@ -150,11 +150,11 @@ def simulate_single_sensor(sample_freq, n, f0, p, v):
 	print("------------------------------")
 	print("Simulating")
 	print("----------")
-	signal = list(signal_gen(period, n, p, v, f0))
+	signal = list(signal_gen(period, n, np.array([0, 0]), p, v, f0))
 	spec = freq_spectrum(signal)
 	print("Frequency Bins: ", len(spec))
 	u, sigma = find_shift(period, f0, spec)
-	print("Frequency Shift: ", u, " (", sig, ")")
+	print("Frequency Shift: ", u, " (", sigma, ")")
 	dopple_v, dopple_sigma = inv_doppler(f0, u), inv_doppler(f0, sigma)
 	print("Doppler Velocity: ", dopple_v, " (", dopple_sigma, ")")
 	err = vr - dopple_v
