@@ -97,7 +97,7 @@ def find_shift(sample_period, f0, spectrum):
 	
 	peak_range = doppler(f0, max_vel)
 	
-	f0_bin = int(f0 / fpb)
+	f0_bin = round(f0 / fpb)
 	bin_range = int(peak_range / fpb)
 	
 	
