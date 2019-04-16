@@ -1,0 +1,16 @@
+FROM balenalib/%%RESIN_MACHINE_NAME%%-debian
+
+RUN apt-get update && apt-get install -y curl wget build-essential libelf-dev awscli bc flex libssl-dev python
+
+COPY ./kernel-module-build /usr/src/app/kernel-module-build
+WORKDIR /usr/src/app/kernel-module-build
+ENV VERSION '2.29.0+rev1.dev'
+RUN ./build.sh %%RESIN_MACHINE_NAME%% $VERSION rpi-i2s-audio
+
+RUN apt-get install -y alsa-utils python3-dev python3-pip python3-pyaudio python3-numpy
+RUN apt-get install -y python3-matplotlib
+
+COPY ./simulation/algorithm.py /usr/src/app/
+COPY ./prototype /usr/src/app
+WORKDIR /usr/src/app
+CMD ./start.sh
