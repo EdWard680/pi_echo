@@ -145,7 +145,7 @@ def veloceration_eqs(sensors, dopple_vs):
 
 	A = [np.dot(pi-pj,v) + vi*r[i] - vj*r[j] for ((pi,pj),(vi,vj),(i,j)) in combs]
 	# A = [np.dot(pi-pj,v) + ((pi[0]-x)**2+(pi[1]-y)**2)**(1/2)*r[i] - ((pj[0]-x)**2+(pj[1]-y)**2)**(1/2)*r[j] for ((pi,pj),(vi,vj),(i,j)) in combs]
-	for a in A: print(a)
+	# for a in A: print(a)
 	b = np.array([0]*len(A))
 
 	return A,b,v,r
