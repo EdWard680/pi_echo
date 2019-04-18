@@ -8,6 +8,7 @@ import math
 import itertools
 from sympy import *
 from sympy.solvers.solveset import linsolve
+import time
 
 from algorithm import *
 import optimizer
@@ -19,7 +20,13 @@ P = np.array([0,0])
 VELOCITY = np.array([1,1])
 SENSORS = [np.array([3,5]), np.array([5,1]), np.array([1,0.5])]
 METHOD = "localize"
+OPTION = 0
 
+fig_spec = plt.figure("spectrum")
+ax_spec = fig_spec.add_subplot(111)
+
+fig_2d = plt.figure("2d")
+ax_2d = fig_2d.add_subplot(111)
 
 def plot(data, shift, f0, sample_period, s, fpb):
 	# print(f0, shift)
@@ -65,23 +72,26 @@ def plot(data, shift, f0, sample_period, s, fpb):
 	fig.show()
 
 def plot_all_spectrums(spec, f0, peak_indices, x_min, x_max, fpb):
-	fig = plt.figure("spectrum")
-	ax = fig.add_subplot(111)
+	# fig_spec = plt.figure("spectrum")
+	# ax_spec = fig_spec.add_subplot(111)
+	global fig_spec, ax_spec
+	fig_spec.clf("spectrum")
+	ax_spec = fig_spec.add_subplot(111)
 
 	xdata = np.array(range(x_min, x_max))*fpb
 	lines = []
 	offset = max(spec[0])*0.01
 	for i,s in enumerate(spec):
-		line, = ax.plot(xdata,s[x_min:x_max], label="s{}".format(i))
+		line, = ax_spec.plot(xdata,s[x_min:x_max], label="s{}".format(i))
 		lines.append(line)
-	ax.annotate('f0', xy=(f0, max(spec[0])), xytext=(f0, max(spec[0])+offset), ha="center")
+	ax_spec.annotate('f0', xy=(f0, max(spec[0])), xytext=(f0, max(spec[0])+offset), ha="center")
 	for i,x in enumerate(peak_indices):
-		ax.annotate('s{}'.format(i), xy=(x*fpb, spec[i][x]), xytext=(x*fpb, spec[i][x]+offset), ha='center')
-	ax.legend()
-	fig.suptitle("Frequency Shift due to the Doppler Effect")
+		ax_spec.annotate('s{}'.format(i), xy=(x*fpb, spec[i][x]), xytext=(x*fpb, spec[i][x]+offset), ha='center')
+	ax_spec.legend()
+	fig_spec.suptitle("Frequency Shift due to the Doppler Effect")
 	plt.xlabel("Frequncy (Hz)")
 	plt.ylabel("Intensity")
-	fig.show()
+	fig_spec.show()
 
 def find_plot_chars(spectrum, f0, sample_period):
 	xmin = 999999
@@ -115,16 +125,16 @@ def find_plot_chars(spectrum, f0, sample_period):
 	return xmin,xmax,peaks,fpb
 
 def on_press(event):
-    global SAMPLE_FREQUENCY, N, F0, P, VELOCITY, SENSORS, METHOD
+    global SAMPLE_FREQUENCY, N, F0, P, VELOCITY, SENSORS, METHOD, OPTION
     print("====================================")
     print("====================================")
     print('Rerunning simulation using P=({},{})'.format(event.xdata, event.ydata))
     print("====================================")
     print("====================================")
     P = np.array([event.xdata,event.ydata])
-    plt.close("2d")
-    plt.close("spectrum")
-    simulate_multiple_sensors(SAMPLE_FREQUENCY, N, F0, P, VELOCITY, SENSORS, METHOD)
+    # plt.close("2d")
+    # plt.close("spectrum")
+    simulate_multiple_sensors(SAMPLE_FREQUENCY, N, F0, P, VELOCITY, SENSORS, METHOD, OPTION)
 
 def move_figure(f, x, y):
     """Move figure's upper left corner to pixel (x, y)"""
@@ -138,43 +148,48 @@ def move_figure(f, x, y):
         # You can also use window.setGeometry
         f.canvas.manager.window.move(x, y)
 
-def plot_2d_layout(sensors, p, v, v_rads, dopple_vs, sol):
-	fig = plt.figure("2d")
-	ax = fig.add_subplot(111)
+def plot_2d_layout(sensors, p, v, v_rads, dopple_vs, sol, option):
+	# fig_2d = plt.figure("2d")
+	# ax_2d = fig_2d.add_subplot(111)
+	global fig_2d, ax_2d
+	fig_2d.clf("2d")
+	ax_2d = fig_2d.add_subplot(111)
 
-	xmin, xmax = ax.get_xlim()
-	ymin, ymax = ax.get_ylim()
+	xmin, xmax = ax_2d.get_xlim()
+	ymin, ymax = ax_2d.get_ylim()
 	xmin = -.25
 	ymin = -.25
 
-	# print(ax.get_xlim())
-	# print(ax.get_ylim())
+	# print(ax_2d.get_xlim())
+	# print(ax_2d.get_ylim())
 	data = [*sensors,p]
 	px, py = zip(*data)
 	y_range = max(py) - min(py)
 	vel_text = p-v*0.2
 
-	vx, vy, vu, vv = [*p,*v]
-	ax.quiver(vx, vy, vu, vv, angles='xy', scale_units='xy', scale=1, color='g', alpha=0.5)
-	xmin = vx-vu - 0.25 if vx-vu - 0.25 < xmin else xmin
-	xmax = vx+vu + 0.25 if vx+vu + 0.25 > xmax else xmax
-	ymin = vy-vv - 0.25 if vy-vv - 0.25 < ymin else ymin
-	ymax = vy+vv + 0.25 if vy+vv + 0.25 > ymax else ymax
+	vel_vx, vel_vy, vel_vu, vel_vv = [*p,*v]
+	# ax_2d.quiver(vx, vy, vu, vv, angles='xy', scale_units='xy', scale=1, color='g', alpha=0.5)
+	xmin = vel_vx-vel_vu - 0.25 if vel_vx-vel_vu - 0.25 < xmin else xmin
+	xmax = vel_vx+vel_vu + 0.25 if vel_vx+vel_vu + 0.25 > xmax else xmax
+	ymin = vel_vy-vel_vv - 0.25 if vel_vy-vel_vv - 0.25 < ymin else ymin
+	ymax = vel_vy+vel_vv + 0.25 if vel_vy+vel_vv + 0.25 > ymax else ymax
 
 	if sol is not None:
-		vx, vy, vu, vv = [*p,*sol]
-		ax.quiver(vx, vy, vu, vv, angles='xy', scale_units='xy', scale=1, color='r', alpha=0.5)
-		xmin = vx-vu - 0.25 if vx-vu - 0.25 < xmin else xmin
-		xmax = vx+vu + 0.25 if vx+vu + 0.25 > xmax else xmax
-		ymin = vy-vv - 0.25 if vy-vv - 0.25 < ymin else ymin
-		ymax = vy+vv + 0.25 if vy+vv + 0.25 > ymax else ymax
+		sol_vx, sol_vy, sol_vu, sol_vv = [*p,*sol]
+		# ax_2d.quiver(vx, vy, vu, vv, angles='xy', scale_units='xy', scale=1, color='r', alpha=0.5)
+		xmin = sol_vx-sol_vu - 0.25 if sol_vx-sol_vu - 0.25 < xmin else xmin
+		xmax = sol_vx+sol_vu + 0.25 if sol_vx+sol_vu + 0.25 > xmax else xmax
+		ymin = sol_vy-sol_vv - 0.25 if sol_vy-sol_vv - 0.25 < ymin else ymin
+		ymax = sol_vy+sol_vv + 0.25 if sol_vy+sol_vv + 0.25 > ymax else ymax
 
 	
 	text_pos = []
+	rad_quiver = []
 	for s,v in zip(sensors,v_rads):
 		proj = np.dot(v,(p-s)/la.norm(p-s))
 		vx,vy,vu,vv = [*s,*proj]
-		ax.quiver(vx, vy, vu, vv, angles='xy', scale_units='xy', scale=1, color='g', alpha=0.5)
+		rad_quiver.append([vx,vy,vu,vv])
+		# ax_2d.quiver(vx, vy, vu, vv, angles='xy', scale_units='xy', scale=1, color='g', alpha=0.5)
 
 		xmin = vx-vu - 0.25 if vx-vu - 0.25 < xmin else xmin
 		xmax = vx+vu + 0.25 if vx+vu + 0.25 > xmax else xmax
@@ -183,10 +198,12 @@ def plot_2d_layout(sensors, p, v, v_rads, dopple_vs, sol):
 
 		text_pos.append(s-proj*0.2)
 
+	dop_quiver = []
 	for s,v in zip(sensors,dopple_vs):
 		proj = np.dot(v,(p-s)/la.norm(p-s))
 		vx,vy,vu,vv = [*s,*proj]
-		ax.quiver(vx, vy, vu, vv, angles='xy', scale_units='xy', scale=1, color='r', alpha=0.5)
+		dop_quiver.append([vx,vy,vu,vv])
+		# ax_2d.quiver(vx, vy, vu, vv, angles='xy', scale_units='xy', scale=1, color='r', alpha=0.5)
 
 		xmin = vx-vu - 0.25 if vx-vu - 0.25 < xmin else xmin
 		xmax = vx+vu + 0.25 if vx+vu + 0.25 > xmax else xmax
@@ -194,26 +211,47 @@ def plot_2d_layout(sensors, p, v, v_rads, dopple_vs, sol):
 		ymax = vy+vv + 0.25 if vy+vv + 0.25 > ymax else ymax
 
 
-	ax.scatter(px,py)
-	for i,(x,y) in enumerate(data):
-		m = "s{}".format(i) if i < len(sensors) else "P"
-		ax.annotate(m, xy=(x,y), xytext=(tuple(text_pos[i])) if i < len(sensors) else tuple(vel_text), ha="center")
-	
 	red_patch = mpatches.Patch(color='red', label='Simulated')
 	green_patch = mpatches.Patch(color='green', label='Ideal')
 	plt.legend(handles=[red_patch, green_patch])
 
-	cid = fig.canvas.mpl_connect('button_press_event', on_press)
+	cid = fig_2d.canvas.mpl_connect('button_press_event', on_press)
 
 	if ymin > -0.25: ymin = -0.25
 	if xmin > -0.25: xmin = -0.25
 	plt.xlim(xmin,xmax)
 	plt.ylim(ymin,ymax)
-	fig.suptitle("Simulated vs. Ideal Radial Velocities")
-	
-	move_figure(fig, 1000, 100)
+	fig_2d.suptitle("Simulated vs. Ideal Radial Velocities")
+	move_figure(fig_2d, 1000, 100)
 
-	fig.show()
+	ax_2d.scatter(px,py)
+	for i,(x,y) in enumerate(data):
+		m = "s{}".format(i) if i < len(sensors) else "P"
+		ax_2d.annotate(m, xy=(x,y), xytext=(tuple(text_pos[i])) if i < len(sensors) else tuple(vel_text), ha="center")
+	fig_2d.show()
+
+	if option: plt.pause(1)
+
+	ax_2d.quiver(vel_vx, vel_vy, vel_vu, vel_vv, angles='xy', scale_units='xy', scale=1, color='g', alpha=0.5)
+	fig_2d.show()
+
+	if option: plt.pause(1)
+
+	vx, vy, vu, vv = zip(*rad_quiver)
+	ax_2d.quiver(vx, vy, vu, vv, angles='xy', scale_units='xy', scale=1, color='g', alpha=0.5)
+	fig_2d.show()
+
+	if option: plt.pause(1)
+
+	vx, vy, vu, vv = zip(*dop_quiver)
+	ax_2d.quiver(vx, vy, vu, vv, angles='xy', scale_units='xy', scale=1, color='r', alpha=0.5)
+	fig_2d.show()
+
+	if option: plt.pause(1)
+
+	ax_2d.quiver(sol_vx, sol_vy, sol_vu, sol_vv, angles='xy', scale_units='xy', scale=1, color='r', alpha=0.5)
+	fig_2d.show()
+
 
 def simulate_single_sensor(sample_freq, n, f0, p, v):
 	velocity_vector = v
@@ -250,8 +288,8 @@ def simulate_single_sensor(sample_freq, n, f0, p, v):
 	print("Plotting")
 	plot(spec, u, f0, period)
 
-def simulate_multiple_sensors(sample_freq, n, f0, p, v, sensors, method="localize"):
-    global SAMPLE_FREQUENCY, N, F0, P, VELOCITY, SENSORS, METHOD
+def simulate_multiple_sensors(sample_freq, n, f0, p, v, sensors, method="localize", option=0):
+    global SAMPLE_FREQUENCY, N, F0, P, VELOCITY, SENSORS, METHOD, OPTION
     SAMPLE_FREQUENCY = sample_freq
     N = n
     F0 = f0
@@ -259,6 +297,7 @@ def simulate_multiple_sensors(sample_freq, n, f0, p, v, sensors, method="localiz
     VELOCITY = v
     SENSORS = sensors
     METHOD = method
+    OPTION = option
     velocity_vector = v
     print("Simulation")
     print("----------")
@@ -350,4 +389,4 @@ def simulate_multiple_sensors(sample_freq, n, f0, p, v, sensors, method="localiz
     elif method == "gradient_descent":
         s = optimizer.Solver(sensors)
         sol = s.find_min(dopple_vs)[1]
-    plot_2d_layout(sensors, p, velocity_vector, v_rads, dopple_vs, sol)
+    plot_2d_layout(sensors, p, velocity_vector, v_rads, dopple_vs, sol, option)
