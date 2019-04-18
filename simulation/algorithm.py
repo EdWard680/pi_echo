@@ -2,7 +2,7 @@
 import math
 import numpy as np
 from numpy import linalg as la
-from sympy import *
+from sympy import symbols, solve
 import itertools
 
 # Speed of sound
@@ -39,10 +39,10 @@ def signal_gen(sample_period, samples, sensor, start, velocity, f0):
 	t = 0
 	for i in range(samples):
 		r = sensor - start + velocity*t
-		# scale = 1/r**2
+		scale = 1/la.norm(r)*1.1
 		w = np.dot(velocity, r / la.norm(r))
 		f = doppler(f0, w)
-		yield math.sin(2*math.pi*f*t) + math.sin(2*math.pi*f0*t)
+		yield math.sin(2*math.pi*f*t)*scale + math.sin(2*math.pi*f0*t)
 		t += sample_period
 
 # Finds a local min
@@ -122,7 +122,7 @@ def find_shift(sample_period, f0, spectrum):
 	freq_mean = mean*fpb
 	std_dev = std_dev*fpb
 	
-	return freq_mean - f0, std_dev
+	return freq_mean - f0, std_dev, spectrum[max_peak]/spectrum[f0_bin]
 
 def freq_spectrum(signal):
 	return [np.absolute(sample) for sample in np.fft.rfft(signal)]
@@ -140,11 +140,11 @@ def veloceration_eqs(sensors, dopple_vs):
 	v_combs = list(itertools.combinations(dopple_vs, 2))
 	index_combs = list(list(itertools.combinations(range(len(sensors)), 2)))
 	combs = list(zip(s_combs, v_combs, index_combs))
-	print(s_combs)
+	# print(s_combs)
 	x,y = symbols('x y')
 
-	# A = [np.dot(pi-pj,v) + vi*r[i] - vj*r[j] for ((pi,pj),(vi,vj),(i,j)) in combs]
-	A = [np.dot(pi-pj,v) + ((pi[0]-x)**2+(pi[1]-y)**2)**(1/2)*r[i] - ((pj[0]-x)**2+(pj[1]-y)**2)**(1/2)*r[j] for ((pi,pj),(vi,vj),(i,j)) in combs]
+	A = [np.dot(pi-pj,v) + vi*r[i] - vj*r[j] for ((pi,pj),(vi,vj),(i,j)) in combs]
+	# A = [np.dot(pi-pj,v) + ((pi[0]-x)**2+(pi[1]-y)**2)**(1/2)*r[i] - ((pj[0]-x)**2+(pj[1]-y)**2)**(1/2)*r[j] for ((pi,pj),(vi,vj),(i,j)) in combs]
 	for a in A: print(a)
 	b = np.array([0]*len(A))
 
