@@ -74,6 +74,8 @@ def find_next_peak(data):
 ''' Returns mean and standard deviation of input data
 '''
 def characterize_peak(data):
+	if len(data) == 0:
+		return 0, None
 	sumweight = 0
 	sumdata = 0
 	for i, v in enumerate(data):
@@ -115,6 +117,9 @@ def find_shift(sample_period, f0, spectrum):
 	
 	# symmetry
 	peak_start = peak_end = min(peak_start, peak_end)
+	
+	if peak_start == 0:
+		return 0, 2*freq_per_bin(sample_period, samples), 0
 	
 	mean, std_dev = characterize_peak(spectrum[max_peak-peak_start:max_peak+peak_end])
 	mean += max_peak-peak_start

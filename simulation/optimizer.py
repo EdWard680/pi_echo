@@ -17,14 +17,14 @@ class Solver(object):
         xdot, ydot = symbols("xdot ydot", cls=Function)
         drs = [symbols("dr{}".format(i)) for i in range(len(sensor_poses))]
         
-        self.zz0 = np.concatenate(sum(sensor_poses)/len(sensor_poses), np.array([0, 0]))
+        self.zz0 = np.concatenate([sum(sensor_poses)/len(sensor_poses), np.array([0, 0])])
         
         # Per Sesnor Error Function
         Es = [(xdot(x)*(x-p[0])+ydot(y)*(y-p[1]))*((x-p[0])**2 + (y-p[1])**2)**(-1/2) - dri 
-                   for p, dri in zip(sensor_poses, self.drs)]
+                   for p, dri in zip(sensor_poses, drs)]
         
         # Objective Function (total error)
-        F = sum((E**2 for E in self.Es))
+        F = sum((E**2 for E in Es))
         
         dxdtx = diff(xdot(x), x)
         dydtx = diff(ydot(y), y)
@@ -51,6 +51,6 @@ class Solver(object):
         F_call = lambda zz: self.F_fn(*zz, *drs)
         G_call = lambda zz: np.array([g_fn(*zz, *drs) for g_fn in self.G_fn])
         
-        rslts = minimize(F_call, zz0, method=method, jac=G_call)
+        rslts = minimize(F_call, self.zz0, method=method, jac=G_call)
         
         return rslts.x[:2], rslts.x[2:]

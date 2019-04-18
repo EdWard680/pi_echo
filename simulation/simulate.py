@@ -10,6 +10,7 @@ from sympy import *
 from sympy.solvers.solveset import linsolve
 
 from algorithm import *
+import optimizer
 
 SAMPLE_FREQUENCY = 44100
 N = 8192
@@ -17,6 +18,7 @@ F0 = 21000
 P = np.array([0,0])
 VELOCITY = np.array([1,1])
 SENSORS = [np.array([3,5]), np.array([5,1]), np.array([1,0.5])]
+METHOD = "localize"
 
 
 def plot(data, shift, f0, sample_period, s, fpb):
@@ -113,7 +115,7 @@ def find_plot_chars(spectrum, f0, sample_period):
 	return xmin,xmax,peaks,fpb
 
 def on_press(event):
-    global SAMPLE_FREQUENCY, N, F0, P, VELOCITY, SENSORS
+    global SAMPLE_FREQUENCY, N, F0, P, VELOCITY, SENSORS, METHOD
     print("====================================")
     print("====================================")
     print('Rerunning simulation using P=({},{})'.format(event.xdata, event.ydata))
@@ -122,7 +124,7 @@ def on_press(event):
     P = np.array([event.xdata,event.ydata])
     plt.close("2d")
     plt.close("spectrum")
-    simulate_multiple_sensors(SAMPLE_FREQUENCY, N, F0, P, VELOCITY, SENSORS)
+    simulate_multiple_sensors(SAMPLE_FREQUENCY, N, F0, P, VELOCITY, SENSORS, METHOD)
 
 def move_figure(f, x, y):
     """Move figure's upper left corner to pixel (x, y)"""
@@ -248,14 +250,15 @@ def simulate_single_sensor(sample_freq, n, f0, p, v):
 	print("Plotting")
 	plot(spec, u, f0, period)
 
-def simulate_multiple_sensors(sample_freq, n, f0, p, v, sensors):
-    global SAMPLE_FREQUENCY, N, F0, P, VELOCITY, SENSORS
+def simulate_multiple_sensors(sample_freq, n, f0, p, v, sensors, method="localize"):
+    global SAMPLE_FREQUENCY, N, F0, P, VELOCITY, SENSORS, METHOD
     SAMPLE_FREQUENCY = sample_freq
     N = n
     F0 = f0
     P = p
     VELOCITY = v
     SENSORS = sensors
+    METHOD = method
     velocity_vector = v
     print("Simulation")
     print("----------")
@@ -303,7 +306,7 @@ def simulate_multiple_sensors(sample_freq, n, f0, p, v, sensors):
     attenuation = [i[2] for i in shift_sigma_att]
     print("Distance from P: ", end='')
     for i,a in enumerate(attenuation):
-    	print("s{}: {}".format(i, 1/a), end=', ' if i < len(attenuation)-1 else '\n')
+    	print("s{}: {}".format(i, a and 1/a), end=', ' if i < len(attenuation)-1 else '\n')
 
     print("Doppler Velocity: ", end='')
     for i,d in enumerate(dopplev_sigma):
@@ -326,20 +329,25 @@ def simulate_multiple_sensors(sample_freq, n, f0, p, v, sensors):
     print("----------------------")
 
     dopple_vs = [v[0] for v in dopplev_sigma]
-    A, b, v, r = veloceration_eqs(sensors,dopple_vs)
+    
+    if method == "localize":
+        A, b, v, r = veloceration_eqs(sensors,dopple_vs)
 
-    # print({r:1/a for r,a in zip(r, attenuation)})
-    A = [e.subs({r:1/a for r,a in zip(r, attenuation)}) for e in A]   
+        # print({r:1/a for r,a in zip(r, attenuation)})
+        A = [e.subs({r:1/a for r,a in zip(r, attenuation)}) for e in A]   
 
-    # print(linsolve(A,v))
-    # print(solve(A))
+        # print(linsolve(A,v))
+        # print(solve(A))
 
-    sol = linsolve(A,v)
-    if sol:
-        sol = np.array(sol.args[0], dtype=float)
-        print("Velocity Vector: [{},{}]".format(*sol))
-    else:
-        print("No solution found")
-        sol = None
-    # print(sol)
+        sol = linsolve(A,v)
+        if sol:
+            sol = np.array(sol.args[0], dtype=float)
+            print("Velocity Vector: [{},{}]".format(*sol))
+        else:
+            print("No solution found")
+            sol = None
+        # print(sol)
+    elif method == "gradient_descent":
+        s = optimizer.Solver(sensors)
+        sol = s.find_min(dopple_vs)[1]
     plot_2d_layout(sensors, p, velocity_vector, v_rads, dopple_vs, sol)
