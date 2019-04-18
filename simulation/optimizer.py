@@ -4,8 +4,8 @@ import numpy as np
 from numpy import linalg as la
 import matplotlib.pyplot as plt
 import math
-import ipywidgets as widgets
-from IPython.display import display, Markdown, Latex
+# import ipywidgets as widgets
+# from IPython.display import display, Markdown, Latex
 import sympy
 from sympy import *
 from scipy.optimize import minimize
