@@ -31,13 +31,15 @@ def simple_plot(ax, ydata, xdata=None, xlabel=None, ylabel=None, title=None):
     if xlabel is not None: ax.set_xlabel(xlabel)
     if ylabel is not None: ax.set_ylabel(ylabel)
     if title is not None: ax.set_title(title)
-    
+
+
+
 def plot_spectrum(ax, spectrum_list, means, f0, fpb, xlabel=None, ylabel=None, title=None):
     xmin, xmax = f0+min(means)-7, f0+max(means)+7
-    xdata = np.array(range(xmin,xmax))*fpb
+    xdata = range(xmin,xmax)
     lines = []
     for i,s in enumerate(spectrum_list):
-        line, = ax.plot(xdata,s[x_min:x_max], label="s{}".format(i))
+        line, = ax.plot(xdata,s[round(xmin/fpb):round(xmax/fpb)], label="s{}".format(i))
         lines.append(line)
     offset = max([j for i in spectrum_list for j in i])*0.01
     f0_amplitude = max([spectrum[round(f0/fpb)] for spectrum in spectrum_list])
@@ -73,16 +75,17 @@ def plot_layout(ax, sensors, p=None, v=None, vr=None, vd=None, sv=None, sp=None,
         if v is None:
             ax.annotate("P", xy=(px,py), xytext=(px, py+offset), ha='center')
 
-    if v is not None:
+    if v is not None and p is not None:
         vx,vy,vu,vv = [*p,*v]
         ax.quiver(vx,vy,vu,vv, angles='xy', scale_units='xy', scale=1, color='g', alpha=0.5)
         xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,vx,vy,vu,vv)
 
-        pos = np.dot(np.array([offset]*2), (p-v)/la.norm(p-v))
+        pos = p - (v)/la.norm(v)*offset
+        print(pos)
         ax.annotate("P", xy=tuple(p), xytext=tuple(pos), ha='center')
 
-        green_patch = mpatches.Patch(color='green', label='Ideal')
-        ax.legend(handles=[green_patch])
+        green_patch = mpatches.Patch(color='green', label='Ideal', alpha=0.5)
+        ax.legend(handles=[green_patch], loc='upper left')
 
     if vr is not None:
         for s,v_rad in zip(sensors,vr):
@@ -91,11 +94,12 @@ def plot_layout(ax, sensors, p=None, v=None, vr=None, vd=None, sv=None, sp=None,
             rad_quiver.append([vx,vy,vu,vv], angles='xy', scale_units='xy', scale=1, color='g', alpha=0.5)
             xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,vx,vy,vu,vv)
 
-            pos = np.dot(np.array([offset]*2), (s-proj)/la.norm(s-proj))
+            pos = s - proj/la.norm(proj) * offset
 
 
-        green_patch = mpatches.Patch(color='green', label='Ideal')
-        ax.legend(handles=[green_patch])
+        green_patch = mpatches.Patch(color='green', label='Ideal', alpha=0.5)
+        ax.legend(handles=[green_patch], loc='upper left')
 
-
+    ax.set_xlim(xmin,xmax)
+    ax.set_ylim(ymin,ymax)
 
