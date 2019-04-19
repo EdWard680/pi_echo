@@ -63,7 +63,7 @@ def plot_layout(ax, sensors, p=None, v=None, vr=None, vd=None, sv=None, sp=None,
     
     px,py = zip(*sensors)
     ax.scatter(px,py)
-    if v_rads is None:
+    if vr is None:
         for i,(x,y) in enumerate(sensors):
             ax.annotate("s{}".format(i), xy=(x,y), xytext=(x, y+offset), ha='center')
 
