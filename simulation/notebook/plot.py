@@ -36,21 +36,14 @@ def simple_plot(ax, ydata, xdata=None, xlabel=None, ylabel=None, title=None):
 
 
 
-def plot_spectrum(ax, spectrum_list, means, f0, fpb, xlabel="Frequncy (Hz)", ylabel="Sound Pressure", title=None):
+def plot_spectrum(ax, spectrum_list, means, f0, fpb, xlabel="Frequency (Hz)", ylabel="Sound Pressure", title=None):
     left, right = max([*means,0]), min([*means,0])
-    print(left,right)
     xmin, xmax = f0-left-7*fpb, f0-right+7*fpb
-    # xmin, xmax = f0-left, f0-right
-    print(xmin,xmax)
     min_bin, max_bin = round(int(xmin)/fpb), round(int(xmax)/fpb)
     xdata = np.array(range(min_bin, max_bin))*fpb#-f0+200
-    # ax.set_xlim(min(xdata), max(xdata))
     lines = []
     for i,s in enumerate(spectrum_list):
-        print(len(s), min_bin, max_bin)
-        print("here")
         line, = ax.plot(xdata,np.array(s[min_bin:max_bin]), label="s{}".format(i))
-        print("there")
         lines.append(line)
     offset = max([j for i in spectrum_list for j in i])*0.01
     f0_amplitude = max([spectrum[round(f0/fpb)] for spectrum in spectrum_list])
@@ -61,9 +54,7 @@ def plot_spectrum(ax, spectrum_list, means, f0, fpb, xlabel="Frequncy (Hz)", yla
         ax.annotate('s{}'.format(i), xy=(x, s[index]), xytext=(x, s[index]+offset), ha='center')
     ax.legend()
     ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    # ax.scatter(ax.get_xlim()[0],ax.get_ylim()[0])
-    
+    ax.set_ylabel(ylabel)    
     if title is not None: ax.set_title(title)
 
 def maintain_bounds(xmin,xmax,ymin,ymax,x,y,u,v):
@@ -96,20 +87,22 @@ def plot_layout(ax, sensors, p=None, v=None, vr=None, vd=None, sv=None, sp=None,
         xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,vx,vy,vu,vv)
 
         pos = p - (v)/la.norm(v)*offset
-        ax.annotate("P", xy=tuple(p), xytext=tuple(pos), ha='center')
+        ax.annotate("P", xy=tuple(p), xytext=tuple(pos), ha='center', , va='center')
 
         green_patch = mpatches.Patch(color='green', label='Ideal', alpha=0.5)
         ax.legend(handles=[green_patch], loc='upper left')
 
     if vr is not None:
-        for s,v_rad in zip(sensors,vr):
-            proj = np.dot(v,(p-s)/la.norm(p-s))
+        for i,(s,v_rad) in enumerate(zip(sensors,vr)):
+            r = (p-s)/la.norm(p-s)
+            proj = np.dot(r,v)*r
+            # print(proj)
             vx,vy,vu,vv = [*s,*proj]
-            rad_quiver.append([vx,vy,vu,vv], angles='xy', scale_units='xy', scale=1, color='g', alpha=0.5)
+            ax.quiver(vx,vy,vu,vv, angles='xy', scale_units='xy', scale=1, color='g', alpha=0.5)
             xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,vx,vy,vu,vv)
 
             pos = s - proj/la.norm(proj) * offset
-
+            ax.annotate("S{}".format(i), xy=tuple(s), xytext=tuple(pos), ha='center', va='center')
 
         green_patch = mpatches.Patch(color='green', label='Ideal', alpha=0.5)
         ax.legend(handles=[green_patch], loc='upper left')
