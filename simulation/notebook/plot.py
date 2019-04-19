@@ -168,3 +168,15 @@ def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None,
     ax.set_ylabel(ylabel)    
     if title is not None: ax.set_title(title)
 
+def plot_error_map(ax, xs, ys, grid, title="Heat Map"):
+    ax.imshow(grid)
+    ax.set_xticks(np.arange(len(xs)))
+    ax.set_yticks(np.arange(len(ys)))
+    ax.set_xticklabels(["{:.2f}".format(x) for x in xs])
+    ax.set_yticklabels(["{:.2f}".format(y) for y in ys])
+    ax.invert_yaxis()
+    for i in range(len(xs)):
+        for j in range(len(ys)):
+            text = ax.text(j, i, "{:.2f}".format(grid[i, j]),
+                        ha="center", va="center", color="w")
+    
