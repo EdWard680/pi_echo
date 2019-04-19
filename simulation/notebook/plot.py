@@ -156,7 +156,7 @@ def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None,
 
         if sq is not None:
             pos = sq - (sv)/la.norm(v)*offset
-            ax.annotate("\\hat Q", xy=tuple(q), xytext=tuple(pos), ha='center', va='center')
+            ax.annotate("$\\hat Q$", xy=tuple(q), xytext=tuple(pos), ha='center', va='center')
             xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,q[0],q[1],pos[0]-q[0],pos[1]-q[1])
 
         magenta_patch = mpatches.Patch(color='magenta', label='Simulated', alpha=0.5)
