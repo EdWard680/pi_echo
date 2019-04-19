@@ -56,12 +56,12 @@ def maintain_bounds(xmin,xmax,ymin,ymax,x,y,u,v):
     ymax = y+v + 0.25 if y+v + 0.25 > ymax else ymax
     return xmin,xmax,ymin,ymax
 
-def plot_layout(ax, sensors, p=None, v=None, vr=None, vd=None, sv=None, sp=None):
+def plot_layout(ax, sensors, p=None, v=None, vr=None, vd=None, sv=None, sp=None, xlabel=None, ylabel=None, title=None):
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
     offset = 0.2
     
-    px,py = zip(sensors)
+    px,py = zip(*sensors)
     ax.scatter(px,py)
     if v_rads is None:
         for i,(x,y) in enumerate(sensors):
@@ -77,10 +77,25 @@ def plot_layout(ax, sensors, p=None, v=None, vr=None, vd=None, sv=None, sp=None)
         vx,vy,vu,vv = [*p,*v]
         ax.quiver(vx,vy,vu,vv, angles='xy', scale_units='xy', scale=1, color='g', alpha=0.5)
         xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,vx,vy,vu,vv)
+
         pos = np.dot(np.array([offset]*2), (p-v)/la.norm(p-v))
         ax.annotate("P", xy=tuple(p), xytext=tuple(pos), ha='center')
 
-    # if vr is not None:
-    #     for s,v_rad in zip(sensors,vr):
+        green_patch = mpatches.Patch(color='green', label='Ideal')
+        ax.legend(handles=[green_patch])
+
+    if vr is not None:
+        for s,v_rad in zip(sensors,vr):
+            proj = np.dot(v,(p-s)/la.norm(p-s))
+            vx,vy,vu,vv = [*s,*proj]
+            rad_quiver.append([vx,vy,vu,vv], angles='xy', scale_units='xy', scale=1, color='g', alpha=0.5)
+            xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,vx,vy,vu,vv)
+
+            pos = np.dot(np.array([offset]*2), (s-proj)/la.norm(s-proj))
+
+
+        green_patch = mpatches.Patch(color='green', label='Ideal')
+        ax.legend(handles=[green_patch])
+
 
 
