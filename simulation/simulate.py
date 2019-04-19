@@ -249,11 +249,12 @@ def plot_2d_layout(sensors, p, v, v_rads, dopple_vs, sol, option):
 
 	if option: plt.pause(1)
 
-	ax_2d.quiver(sol_vx, sol_vy, sol_vu, sol_vv, angles='xy', scale_units='xy', scale=1, color='r', alpha=0.5)
-	fig_2d.show()
+	if sol is not None:
+		ax_2d.quiver(sol_vx, sol_vy, sol_vu, sol_vv, angles='xy', scale_units='xy', scale=1, color='r', alpha=0.5)
+		fig_2d.show()
 
 
-def simulate_single_sensor(sample_freq, n, f0, p, v):
+def simulate_single_sensor(sample_freq, n, f0, p, v, s):
 	velocity_vector = v
 	print("Simulation")
 	print("----------")
@@ -265,7 +266,7 @@ def simulate_single_sensor(sample_freq, n, f0, p, v):
 	print("Emitted Frequency Bin: ", f0/freq_per_bin(period, n))
 	print("Starting at: ", p)
 	print("Velocity vector: ", v)
-	vr = np.dot(v, p / la.norm(p))
+	vr = np.dot(v, (p-s) / la.norm(p-s))
 	print("Expected radial velocity: ", vr)
 	print("Frequency Resolution: ", freq_per_bin(period, n), " Hz per bin")
 	print("Speed Resolution: ", inv_doppler(f0, freq_per_bin(period, n)))
@@ -286,7 +287,9 @@ def simulate_single_sensor(sample_freq, n, f0, p, v):
 	print("Error: ", err, " (", err/vr*100, "%)")
 	print("----------------------")
 	print("Plotting")
-	plot(spec, u, f0, period)
+	# plot(spec, u, f0, period)
+	x_min, x_max, peak_indices, fpb = find_plot_chars([spec], f0, period)
+	plot(spec, u, f0, period, s, fpb)
 
 def simulate_multiple_sensors(sample_freq, n, f0, p, v, sensors, method="localize", option=0):
     global SAMPLE_FREQUENCY, N, F0, P, VELOCITY, SENSORS, METHOD, OPTION
@@ -369,7 +372,8 @@ def simulate_multiple_sensors(sample_freq, n, f0, p, v, sensors, method="localiz
 
     dopple_vs = [v[0] for v in dopplev_sigma]
     
-    if method == "localize":
+    sol = None
+    if method == "localize" and len(sensors) == 3:
         A, b, v, r = veloceration_eqs(sensors,dopple_vs)
 
         # print({r:1/a for r,a in zip(r, attenuation)})
