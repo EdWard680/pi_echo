@@ -84,15 +84,15 @@ def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None,
 
     if v is not None and q is not None:
         vx,vy,vu,vv = [*q,*v]
-        ax.quiver(vx,vy,vu,vv, angles='xy', scale_units='xy', scale=1, color='g', alpha=0.5)
+        ax.quiver(vx,vy,vu,vv, angles='xy', scale_units='xy', scale=1, color='c', alpha=0.5)
         xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,vx,vy,vu,vv)
 
         pos = q - (v)/la.norm(v)*offset
         ax.annotate("Q", xy=tuple(q), xytext=tuple(pos), ha='center', va='center')
         xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,q[0],q[1],pos[0]-q[0],pos[1]-q[1])
 
-        green_patch = mpatches.Patch(color='green', label='Ideal', alpha=0.5)
-        ax.legend(handles=[green_patch], loc='upper left')
+        cyan_patch = mpatches.Patch(color='cyan', label='Ideal', alpha=0.5)
+        ax.legend(handles=[cyan_patch], loc='upper left')
 
     if vr is not None:
         for i,(s,v_rad) in enumerate(zip(sensors,vr)):
@@ -109,15 +109,15 @@ def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None,
                 pos = s + proj/la.norm(proj) * offset
             # print(proj)
             
-            ax.quiver(vx,vy,vu,vv, angles='xy', scale_units='xy', scale=1, color='g', alpha=0.5, width=0.011)
+            ax.quiver(vx,vy,vu,vv, angles='xy', scale_units='xy', scale=1, color='c', alpha=0.5)
             xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,vx,vy,vu,vv)
 
             
             ax.annotate("S{}".format(i), xy=tuple(s), xytext=tuple(pos), ha='center', va='center')
             xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,s[0],s[1],pos[0]-s[0],pos[1]-s[1])
 
-        green_patch = mpatches.Patch(color='green', label='Ideal', alpha=0.5)
-        ax.legend(handles=[green_patch], loc='upper left')
+        cyan_patch = mpatches.Patch(color='cyan', label='Ideal', alpha=0.5)
+        ax.legend(handles=[cyan_patch], loc='upper left')
 
     if vd is not None:
         for i,(s,v_dop) in enumerate(zip(sensors,vd)):
@@ -134,11 +134,11 @@ def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None,
                 pos = s + proj/la.norm(proj) * offset
             # print(proj)
             
-            ax.quiver(vx,vy,vu,vv, angles='xy', scale_units='xy', scale=1, color='r', alpha=0.5)
+            ax.quiver(vx,vy,vu,vv, angles='xy', scale_units='xy', scale=1, color='m', alpha=0.5)
             xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,vx,vy,vu,vv)
 
-        red_patch = mpatches.Patch(color='red', label='Simulated', alpha=0.5)
-        ax.legend(handles=[green_patch, red_patch], loc='upper left')
+        magenta_patch = mpatches.Patch(color='magenta', label='Simulated', alpha=0.5)
+        ax.legend(handles=[cyan_patch, magenta_patch], loc='upper left')
 
     if sq is not None: 
         px,py = sq[0], sq[1]
@@ -147,7 +147,21 @@ def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None,
             ax.annotate("Q^", xy=(px,py), xytext=(px, py+offset), ha='center')
             xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,x,y,0,offset)
     else:
-        sq = v
+        sq = q
+
+    if sv is not None:
+        vx,vy,vu,vv = [*sq,*sv]
+        ax.quiver(vx,vy,vu,vv, angles='xy', scale_units='xy', scale=1, color='m', alpha=0.5)
+        xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,vx,vy,vu,vv)
+
+        if sq is not None:
+            pos = sq - (sv)/la.norm(v)*offset
+            ax.annotate("Q^", xy=tuple(q), xytext=tuple(pos), ha='center', va='center')
+            xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,q[0],q[1],pos[0]-q[0],pos[1]-q[1])
+
+        magenta_patch = mpatches.Patch(color='magenta', label='Simulated', alpha=0.5)
+        ax.legend(handles=[cyan_patch, magenta_patch], loc='upper left')
+
 
     ax.set_xlim(xmin,xmax)
     ax.set_ylim(ymin,ymax)
