@@ -42,15 +42,15 @@ def plot_spectrum(ax, spectrum_list, means, f0, fpb, xlabel="Frequency (Hz)", yl
     xdata = np.array(range(min_bin, max_bin))*fpb#-f0+200
     lines = []
     for i,s in enumerate(spectrum_list):
-        line, = ax.plot(xdata,np.array(s[min_bin:max_bin]), label="s{}".format(i))
+        line, = ax.plot(xdata,np.array(s[min_bin:max_bin]), label="$S_{}$".format(i))
         lines.append(line)
     offset = max([j for i in spectrum_list for j in i])*0.01
     f0_amplitude = max([spectrum[round(f0/fpb)] for spectrum in spectrum_list])
-    ax.annotate('f0', xy=(f0, f0_amplitude), xytext=(f0, f0_amplitude+offset), ha="center")
+    ax.annotate('$f_0$', xy=(f0, f0_amplitude), xytext=(f0, f0_amplitude+offset), ha="center")
     for i,(s,x) in enumerate(zip(spectrum_list,means)):
         x = f0-x
         index = round(int(x)/fpb)
-        ax.annotate('s{}'.format(i), xy=(x, s[index]), xytext=(x, s[index]+offset), ha='center')
+        ax.annotate('$S_{}$'.format(i), xy=(x, s[index]), xytext=(x, s[index]+offset), ha='center')
     ax.legend()
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)    
@@ -63,7 +63,7 @@ def maintain_bounds(xmin,xmax,ymin,ymax,x,y,u,v):
     ymax = y+v + 0.25 if y+v + 0.25 > ymax else ymax
     return xmin,xmax,ymin,ymax
 
-def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None, xlabel=None, ylabel=None, title=None):
+def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None, xlabel="X (meters)", ylabel="Y (meters)", title=None):
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
     offset = 0.2
@@ -72,14 +72,14 @@ def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None,
     ax.scatter(px,py)
     if vr is None:
         for i,(x,y) in enumerate(sensors):
-            ax.annotate("S{}".format(i), xy=(x,y), xytext=(x, y+offset), ha='center')
+            ax.annotate("$S_{}$".format(i), xy=(x,y), xytext=(x, y+offset), ha='center')
             xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,x,y,0,offset)
 
     if q is not None:
         px,py = q[0], q[1]
         ax.scatter(px,py)
         if v is None:
-            ax.annotate("Q", xy=(px,py), xytext=(px, py+offset), ha='center')
+            ax.annotate("$Q$", xy=(px,py), xytext=(px, py+offset), ha='center')
             xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,x,y,0,offset)
 
     if v is not None and q is not None:
@@ -88,7 +88,7 @@ def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None,
         xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,vx,vy,vu,vv)
 
         pos = q - (v)/la.norm(v)*offset
-        ax.annotate("Q", xy=tuple(q), xytext=tuple(pos), ha='center', va='center')
+        ax.annotate("$Q$", xy=tuple(q), xytext=tuple(pos), ha='center', va='center')
         xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,q[0],q[1],pos[0]-q[0],pos[1]-q[1])
 
         cyan_patch = mpatches.Patch(color='cyan', label='Ideal', alpha=0.5)
@@ -113,7 +113,7 @@ def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None,
             xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,vx,vy,vu,vv)
 
             
-            ax.annotate("S{}".format(i), xy=tuple(s), xytext=tuple(pos), ha='center', va='center')
+            ax.annotate("$S_{}$".format(i), xy=tuple(s), xytext=tuple(pos), ha='center', va='center')
             xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,s[0],s[1],pos[0]-s[0],pos[1]-s[1])
 
         cyan_patch = mpatches.Patch(color='cyan', label='Ideal', alpha=0.5)
@@ -144,7 +144,7 @@ def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None,
         px,py = sq[0], sq[1]
         ax.scatter(px,py)
         if sv is None:
-            ax.annotate("Q^", xy=(px,py), xytext=(px, py+offset), ha='center')
+            ax.annotate("$\\hat Q$", xy=(px,py), xytext=(px, py+offset), ha='center')
             xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,x,y,0,offset)
     else:
         sq = q
@@ -156,13 +156,15 @@ def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None,
 
         if sq is not None:
             pos = sq - (sv)/la.norm(v)*offset
-            ax.annotate("Q^", xy=tuple(q), xytext=tuple(pos), ha='center', va='center')
+            ax.annotate("\\hat Q", xy=tuple(q), xytext=tuple(pos), ha='center', va='center')
             xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,q[0],q[1],pos[0]-q[0],pos[1]-q[1])
 
         magenta_patch = mpatches.Patch(color='magenta', label='Simulated', alpha=0.5)
         ax.legend(handles=[cyan_patch, magenta_patch], loc='upper left')
 
-
     ax.set_xlim(xmin,xmax)
     ax.set_ylim(ymin,ymax)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)    
+    if title is not None: ax.set_title(title)
 
