@@ -63,7 +63,7 @@ def maintain_bounds(xmin,xmax,ymin,ymax,x,y,u,v):
     ymax = y+v + 0.25 if y+v + 0.25 > ymax else ymax
     return xmin,xmax,ymin,ymax
 
-def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None, xlabel="X (meters)", ylabel="Y (meters)", title=None):
+def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None, xlabel="X (meters)", ylabel="Y (meters)", title=None, leg="upper left"):
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
     offset = 0.2
@@ -138,7 +138,7 @@ def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None,
             xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,vx,vy,vu,vv)
 
         magenta_patch = mpatches.Patch(color='magenta', label='Simulated', alpha=0.5)
-        ax.legend(handles=[cyan_patch, magenta_patch], loc='upper left')
+        ax.legend(handles=[cyan_patch, magenta_patch], loc=leg)
 
     if sq is not None: 
         px,py = sq[0], sq[1]
@@ -156,11 +156,11 @@ def plot_layout(ax, sensors, q=None, v=None, vr=None, vd=None, sq=None, sv=None,
 
         if sq is not None:
             pos = sq - (sv)/la.norm(v)*offset
-            ax.annotate("\\hat Q", xy=tuple(q), xytext=tuple(pos), ha='center', va='center')
+            ax.annotate("$\\hat Q$", xy=tuple(q), xytext=tuple(pos), ha='center', va='center')
             xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,q[0],q[1],pos[0]-q[0],pos[1]-q[1])
 
         magenta_patch = mpatches.Patch(color='magenta', label='Simulated', alpha=0.5)
-        ax.legend(handles=[cyan_patch, magenta_patch], loc='upper left')
+        ax.legend(handles=[cyan_patch, magenta_patch], loc=leg)
 
     ax.set_xlim(xmin,xmax)
     ax.set_ylim(ymin,ymax)
