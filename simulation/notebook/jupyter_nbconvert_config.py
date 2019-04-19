@@ -1,2 +1,3 @@
-c = get_config()
-c.Exporter.preprocessors = ['pre_pymarkdown.PyMarkdownPreprocessor']
+get_config().Exporter.preprocessors = [
+	'jupyter_contrib_nbextensions.nbconvert_support.CodeFoldingPreprocessor'
+]
