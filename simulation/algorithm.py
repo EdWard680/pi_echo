@@ -38,7 +38,7 @@ def resolution(sample_period, samples, f0, vmax):
 def signal_gen(sample_period, samples, sensor, start, velocity, f0):
 	t = 0
 	for i in range(samples):
-		r = sensor - start + velocity*t
+		r = start - sensor + velocity*t
 		scale = 1/la.norm(r)*1.1
 		w = np.dot(velocity, r / la.norm(r))
 		f = doppler(f0, w)
@@ -127,7 +127,7 @@ def find_shift(sample_period, f0, spectrum):
 	freq_mean = mean*fpb
 	std_dev = std_dev*fpb
 	
-	return freq_mean - f0, std_dev, spectrum[max_peak]/spectrum[f0_bin]
+	return f0 - freq_mean, std_dev, spectrum[max_peak]/spectrum[f0_bin]
 
 def freq_spectrum(signal):
 	return [np.absolute(sample) for sample in np.fft.rfft(signal)]
