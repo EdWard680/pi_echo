@@ -20,9 +20,11 @@ def side_by_side(title=None):
     return ax1,ax2
 
 def not_side_by_side(title=None):
+    fig=plt.figure(figsize=(18, 16), dpi= 80, facecolor='w', edgecolor='k')
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    return ax
+    if title is not None: fig.suptitle(title)
+    return ax,fig
 
 
 def simple_plot(ax, ydata, xdata=None, xlabel=None, ylabel=None, title=None):
@@ -34,22 +36,35 @@ def simple_plot(ax, ydata, xdata=None, xlabel=None, ylabel=None, title=None):
 
 
 
-def plot_spectrum(ax, spectrum_list, means, f0, fpb, xlabel=None, ylabel=None, title=None):
-    xmin, xmax = f0+min(means)-7, f0+max(means)+7
-    xdata = range(xmin,xmax)
+def plot_spectrum(ax, spectrum_list, means, f0, fpb, xlabel="Frequncy (Hz)", ylabel="Sound Pressure", title=None):
+    left, right = max([*means,0]), min([*means,0])
+    print(left,right)
+    xmin, xmax = f0-left-7*fpb, f0-right+7*fpb
+    # xmin, xmax = f0-left, f0-right
+    print(xmin,xmax)
+    min_bin, max_bin = round(int(xmin)/fpb), round(int(xmax)/fpb)
+    xdata = np.array(range(min_bin, max_bin))*fpb#-f0+200
+    # ax.set_xlim(min(xdata), max(xdata))
     lines = []
     for i,s in enumerate(spectrum_list):
-        line, = ax.plot(xdata,s[round(xmin/fpb):round(xmax/fpb)], label="s{}".format(i))
+        print(len(s), min_bin, max_bin)
+        print("here")
+        line, = ax.plot(xdata,np.array(s[min_bin:max_bin]), label="s{}".format(i))
+        print("there")
         lines.append(line)
     offset = max([j for i in spectrum_list for j in i])*0.01
     f0_amplitude = max([spectrum[round(f0/fpb)] for spectrum in spectrum_list])
-    ax_spec.annotate('f0', xy=(f0, f0_amplitude), xytext=(f0, f0_amplitude+offset), ha="center")
+    ax.annotate('f0', xy=(f0, f0_amplitude), xytext=(f0, f0_amplitude+offset), ha="center")
     for i,(s,x) in enumerate(zip(spectrum_list,means)):
-        x += f0
-        ax_spec.annotate('s{}'.format(i), xy=(x, s[x]), xytext=(x, s[x]+offset), ha='center')
+        x = f0-x
+        index = round(int(x)/fpb)
+        ax.annotate('s{}'.format(i), xy=(x, s[index]), xytext=(x, s[index]+offset), ha='center')
     ax.legend()
-    fig.set_xlabel("Frequncy (Hz)")
-    fig.set_ylabel("Sound Pressure (Pa)")
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    # ax.scatter(ax.get_xlim()[0],ax.get_ylim()[0])
+    
+    if title is not None: ax.set_title(title)
 
 def maintain_bounds(xmin,xmax,ymin,ymax,x,y,u,v):
     xmin = x-u - 0.25 if x-u - 0.25 < xmin else xmin
@@ -67,10 +82,10 @@ def plot_layout(ax, sensors, p=None, v=None, vr=None, vd=None, sv=None, sp=None,
     ax.scatter(px,py)
     if vr is None:
         for i,(x,y) in enumerate(sensors):
-            ax.annotate("s{}".format(i), xy=(x,y), xytext=(x, y+offset), ha='center')
+            ax.annotate("S{}".format(i), xy=(x,y), xytext=(x, y+offset), ha='center')
 
     if p is not None:
-        px,py = p[0], [1]
+        px,py = p[0], p[1]
         ax.scatter(px,py)
         if v is None:
             ax.annotate("P", xy=(px,py), xytext=(px, py+offset), ha='center')
@@ -81,7 +96,6 @@ def plot_layout(ax, sensors, p=None, v=None, vr=None, vd=None, sv=None, sp=None,
         xmin,xmax,ymin,ymax = maintain_bounds(xmin,xmax,ymin,ymax,vx,vy,vu,vv)
 
         pos = p - (v)/la.norm(v)*offset
-        print(pos)
         ax.annotate("P", xy=tuple(p), xytext=tuple(pos), ha='center')
 
         green_patch = mpatches.Patch(color='green', label='Ideal', alpha=0.5)
